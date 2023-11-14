@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"fmt"
 	"github.com/casbin/casbin/v2"
 	"github.com/gofiber/fiber/v2"
 	pb "github.com/husanmusa/auth_pro_service/genproto/auth_service"
@@ -141,10 +140,10 @@ func (h userController) AddUser(enforcer *casbin.Enforcer) fiber.Handler {
 			return ctx.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 		}
 
-		_, err = enforcer.AddGroupingPolicy(fmt.Sprint(user.Id), user.Role)
-		if err != nil {
-			return ctx.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
-		}
+		//_, err = enforcer.AddGroupingPolicy(fmt.Sprint(user.Id), user.Role)
+		//if err != nil {
+		//	return ctx.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+		//}
 
 		return ctx.Status(http.StatusOK).JSON("SUCCESS")
 	}
@@ -186,7 +185,7 @@ func (h userController) UpdateUser(ctx *fiber.Ctx) error {
 // @Router /api/user/{user_id} [DELETE]
 func (h userController) DeleteUser(ctx *fiber.Ctx) error {
 
-	id := ctx.Params("id")
+	id := ctx.Params("user_id")
 
 	_, err := h.userService.UserService().DeleteUser(ctx.Context(), &pb.ById{Id: id})
 	if err != nil {

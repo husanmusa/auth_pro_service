@@ -2,7 +2,6 @@ package api
 
 import (
 	"encoding/json"
-	"fmt"
 	swagger "github.com/arsmn/fiber-swagger/v2"
 	"github.com/casbin/casbin/v2"
 	"github.com/gofiber/fiber/v2"
@@ -20,20 +19,7 @@ import (
 // SetUpRouter godoc
 // @description This is a api gateway
 // @termsOfService https://udevs.io
-func SetUpRouter(svc client.ServiceManagerI) *fiber.App {
-	enforcer, err := casbin.NewEnforcer("config/rbac_model.conf")
-	if err != nil {
-		panic(fmt.Sprintf("failed to create casbin enforcer: %v", err))
-	}
-	if hasPolicy := enforcer.HasPolicy("doctor", "report", "read"); !hasPolicy {
-		enforcer.AddPolicy("doctor", "report", "read")
-	}
-	if hasPolicy := enforcer.HasPolicy("doctor", "report", "write"); !hasPolicy {
-		enforcer.AddPolicy("doctor", "report", "write")
-	}
-	if hasPolicy := enforcer.HasPolicy("patient", "report", "read"); !hasPolicy {
-		enforcer.AddPolicy("patient", "report", "read")
-	}
+func SetUpRouter(svc client.ServiceManagerI, enforcer *casbin.Enforcer) *fiber.App {
 
 	router := fiber.New(fiber.Config{JSONEncoder: json.Marshal, BodyLimit: 100 * 1024 * 1024})
 	router.Use(logger.New(), cors.New())
@@ -49,9 +35,9 @@ func SetUpRouter(svc client.ServiceManagerI) *fiber.App {
 	r.Use(middleware.AuthorizeJWT())
 
 	// APPOINTMENT
-	r.Get("/user/", middleware.Authorize("report", "read", enforcer), userController.GetAllUser)
-	r.Get("/user/:user_id", middleware.Authorize("report", "read", enforcer), userController.GetUser)
-	r.Put("/user/:user_id", middleware.Authorize("report", "write", enforcer), userController.UpdateUser)
-	r.Delete("/user/:user_id", middleware.Authorize("report", "write", enforcer), userController.DeleteUser)
+	r.Get("/user", middleware.Authorize("userGet", "read", enforcer), userController.GetAllUser)
+	r.Get("/user/:user_id", middleware.Authorize("userGet", "read", enforcer), userController.GetUser)
+	r.Put("/user/:user_id", middleware.Authorize("userUpt", "write", enforcer), userController.UpdateUser)
+	r.Delete("/user/:user_id", middleware.Authorize("userUpt", "write", enforcer), userController.DeleteUser)
 	return router
 }

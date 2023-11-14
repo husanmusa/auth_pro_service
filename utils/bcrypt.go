@@ -20,17 +20,17 @@ func ComparePassword(dbPass, pass string) bool {
 }
 
 // GenerateToken -> generates token
-func GenerateToken(userid string) string {
+func GenerateToken(userid, role string) string {
 	claims := jwt.MapClaims{
 		"exp":    time.Now().Add(time.Hour * 3).Unix(),
 		"iat":    time.Now().Unix(),
 		"userID": userid,
+		"role":   role,
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	t, _ := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
 	return t
-
 }
 
 // ValidateToken --> validate the given token

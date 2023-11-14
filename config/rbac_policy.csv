@@ -1,0 +1,6 @@
+p, admin, "userGet", read
+p, admin, "userUpt", write
+p, admin, "bookGet", read
+p, admin, "bookUpt", write
+
+p, user, "bookGet", read

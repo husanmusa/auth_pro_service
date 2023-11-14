@@ -11,6 +11,7 @@ service UserService {
   rpc GetUserList(GetUserListRequest) returns (GetUserListResponse) {}
   rpc DeleteUser(ById) returns (google.protobuf.Empty) {}
   rpc SignInUser(SignInReq) returns (SignInResp) {}
+  rpc HasAccess(HasAccessReq) returns (HasAccessResp) {}
 }
 
 message User {
@@ -42,4 +43,14 @@ message SignInResp {
 message SignInReq {
   string username = 1;
   string password = 2;
+}
+
+message HasAccessReq {
+  string token = 1;
+  string obj = 2;
+  string act = 3;
+}
+
+message HasAccessResp {
+  bool hasAccess = 1;
 }

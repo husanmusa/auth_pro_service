@@ -2,7 +2,10 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"github.com/casbin/casbin/v2"
+	"github.com/dgrijalva/jwt-go"
 	"github.com/husanmusa/auth_pro_service/config"
 	pb "github.com/husanmusa/auth_pro_service/genproto/auth_service"
 	"github.com/husanmusa/auth_pro_service/grpc/client"
@@ -18,16 +21,18 @@ type userService struct {
 	cfg      config.Config
 	log      logger.LoggerI
 	strg     storage.StorageI
+	enforcer *casbin.Enforcer
 	services client.ServiceManagerI
 	pb.UnimplementedUserServiceServer
 }
 
-func NewUserService(cfg config.Config, log logger.LoggerI, strg storage.StorageI, svcs client.ServiceManagerI) *userService {
+func NewUserService(cfg config.Config, log logger.LoggerI, strg storage.StorageI, svcs client.ServiceManagerI, enforcer *casbin.Enforcer) *userService {
 	return &userService{
 		cfg:      cfg,
 		log:      log,
 		strg:     strg,
 		services: svcs,
+		enforcer: enforcer,
 	}
 }
 
@@ -103,15 +108,46 @@ func (s *userService) SignInUser(ctx context.Context, req *pb.SignInReq) (*pb.Si
 
 	if isTrue := utils.ComparePassword(user.Password, req.Password); isTrue {
 		fmt.Println("user before", user.Id)
-		//dbUserID, err := strconv.ParseUint(user.Id, 10, 64)
-		//if err != nil {
-		//	s.log.Error("!!!GetByUsername--->", logger.Error(err))
-		//	return nil, status.Error(codes.InvalidArgument, err.Error())
-		//}
 
-		token := utils.GenerateToken((user.Id))
+		token := utils.GenerateToken(user.Id, user.Role)
 		return &pb.SignInResp{Token: token}, nil
 	}
 
 	return nil, status.Error(codes.InvalidArgument, err.Error())
+}
+
+func (s *userService) HasAccess(ctx context.Context, req *pb.HasAccessReq) (*pb.HasAccessResp, error) {
+	s.log.Info("---HasAccess--->", logger.Any("req", req))
+	token, err := utils.ValidateToken(req.Token)
+	if err != nil {
+		s.log.Error("!!!HasAccess--->", logger.Error(err))
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		s.log.Error("!!!HasAccess--->", logger.Error(errors.New("invalid token claims in hasAccess")))
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+	role := claims["role"]
+
+	err = s.enforcer.LoadPolicy()
+	if err != nil {
+		s.log.Error("!!!HasAccess--->", logger.Error(errors.New("Failed to load policy from DB")))
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+
+	// Casbin enforces policy
+	ok, err = s.enforcer.Enforce(role, req.Obj, req.Act)
+	if err != nil {
+		s.log.Error("!!!HasAccess--->", logger.Error(errors.New("Error occurred when authorizing user")))
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+
+	if !ok {
+		s.log.Error("!!!HasAccess--->", logger.Error(errors.New("You are not authorized")))
+		return nil, status.Error(codes.InvalidArgument, errors.New("You are not authorized").Error())
+	}
+
+	return &pb.HasAccessResp{HasAccess: ok}, nil
 }

@@ -23,7 +23,7 @@ create-new-migration: # make create-new-migration name=file_name
 	migrate create -ext sql -dir migrations/postgres -seq $(name)
 
 mig-up:
-	goose -dir ./migrations/postgres postgres "user=postgres host=localhost dbname=postgres sslmode=disable password=pass" up
+	goose -dir ./migrations/postgres postgres "user=husanmusa host=localhost dbname=postgres sslmode=disable password=pass" up
 
 mig-down:
 	goose -dir ./migrations/postgres postgres "user=postgres dbname=postgres sslmode=disable password=pass" down

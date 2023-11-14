@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"github.com/casbin/casbin/v2"
 	"github.com/husanmusa/auth_pro_service/api"
 	"github.com/husanmusa/auth_pro_service/config"
 	"github.com/husanmusa/auth_pro_service/grpc"
@@ -41,7 +42,11 @@ func main() {
 	if err != nil {
 		log.Panic("client.NewGrpcClients", logger.Error(err))
 	}
-	grpcServer := grpc.SetUpServer(cfg, log, pgStore, svcs)
+	enforcer, err := casbin.NewEnforcer("config/rbac_model.conf", "config/rbac_policy.csv")
+	if err != nil {
+		log.Error("casbin.NewEnforcer", logger.Error(err))
+	}
+	grpcServer := grpc.SetUpServer(cfg, log, pgStore, svcs, enforcer)
 	go func() {
 		lis, err := net.Listen("tcp", cfg.AuthServicePort)
 		if err != nil {
@@ -52,7 +57,8 @@ func main() {
 			log.Error("grpcServer.Serve", logger.Error(err))
 		}
 	}()
-	r := api.SetUpRouter(svcs)
+
+	r := api.SetUpRouter(svcs, enforcer)
 
 	err = r.Listen(cfg.HTTPPort)
 	if err != nil {

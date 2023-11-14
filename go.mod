@@ -1,6 +1,6 @@
 module github.com/husanmusa/auth_pro_service
 
-go 1.21.0
+go 1.19
 
 require (
 	github.com/arsmn/fiber-swagger/v2 v2.31.1
