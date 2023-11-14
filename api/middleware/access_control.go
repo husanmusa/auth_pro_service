@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gofiber/fiber/v2"
-	"github.com/husanmusa/auth_pro_service/utils"
+	"github.com/husanmusa/auth_pro_service/pkg/utils"
 	"net/http"
 	"strings"
 

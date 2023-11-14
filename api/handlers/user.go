@@ -1,35 +1,13 @@
-package controller
+package handlers
 
 import (
 	"github.com/casbin/casbin/v2"
 	"github.com/gofiber/fiber/v2"
 	pb "github.com/husanmusa/auth_pro_service/genproto/auth_service"
-	"github.com/husanmusa/auth_pro_service/grpc/client"
-	"github.com/husanmusa/auth_pro_service/utils"
+	"github.com/husanmusa/auth_pro_service/pkg/utils"
 	"net/http"
 	"strconv"
 )
-
-// UserController : represent the user's controller contract
-type UserController interface {
-	AddUser(enforcer *casbin.Enforcer) fiber.Handler
-	GetUser(ctx *fiber.Ctx) error
-	GetAllUser(ctx *fiber.Ctx) error
-	SignInUser(ctx *fiber.Ctx) error
-	UpdateUser(ctx *fiber.Ctx) error
-	DeleteUser(ctx *fiber.Ctx) error
-}
-
-type userController struct {
-	userService client.ServiceManagerI
-}
-
-// NewUserController -> returns new user controller
-func NewUserController(userService client.ServiceManagerI) UserController {
-	return userController{
-		userService: userService,
-	}
-}
 
 // GetAllUser godoc
 // @Security ApiKeyAuth
@@ -45,7 +23,7 @@ func NewUserController(userService client.ServiceManagerI) UserController {
 // @Failure 400 {object} http.Response{data=string} "Bad request"
 // @Failure 500 {object} http.Response{data=string} "Internal server error"
 // @Router /api/user/ [GET]
-func (h userController) GetAllUser(ctx *fiber.Ctx) error {
+func (h Handler) GetAllUser(ctx *fiber.Ctx) error {
 	limit, err := getLimitParam(ctx)
 	if err != nil {
 		return ctx.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
@@ -55,7 +33,7 @@ func (h userController) GetAllUser(ctx *fiber.Ctx) error {
 		return ctx.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}
 
-	users, err := h.userService.UserService().GetUserList(ctx.Context(), &pb.GetUserListRequest{
+	users, err := h.services.UserService().GetUserList(ctx.Context(), &pb.GetUserListRequest{
 		Limit:  int32(limit),
 		Offset: int32(offset),
 	})
@@ -78,10 +56,10 @@ func (h userController) GetAllUser(ctx *fiber.Ctx) error {
 // @Failure 400 {object} http.Response{data=string} "Bad request"
 // @Failure 500 {object} http.Response{data=string} "Internal server error"
 // @Router /api/user/{user_id} [GET]
-func (h userController) GetUser(ctx *fiber.Ctx) error {
+func (h Handler) GetUser(ctx *fiber.Ctx) error {
 	id := ctx.Params("user")
 
-	user, err := h.userService.UserService().GetUser(ctx.Context(), &pb.ById{Id: id})
+	user, err := h.services.UserService().GetUser(ctx.Context(), &pb.ById{Id: id})
 	if err != nil {
 		return ctx.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}
@@ -101,13 +79,13 @@ func (h userController) GetUser(ctx *fiber.Ctx) error {
 // @Failure 400 {object} http.Response{data=string} "Bad request"
 // @Failure 500 {object} http.Response{data=string} "Internal server error"
 // @Router /api/user/signin [POST]
-func (h userController) SignInUser(ctx *fiber.Ctx) error {
+func (h Handler) SignInUser(ctx *fiber.Ctx) error {
 	var user pb.SignInReq
 	if err := ctx.BodyParser(&user); err != nil {
 		return ctx.Status(http.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
 
-	token, err := h.userService.UserService().SignInUser(ctx.Context(), &user)
+	token, err := h.services.UserService().SignInUser(ctx.Context(), &user)
 	if err != nil {
 		return ctx.Status(http.StatusInternalServerError).JSON(fiber.Map{"msg": "No Such User Found"})
 	}
@@ -127,7 +105,7 @@ func (h userController) SignInUser(ctx *fiber.Ctx) error {
 // @Failure 400 {object} http.Response{data=string} "Bad request"
 // @Failure 500 {object} http.Response{data=string} "Internal server error"
 // @Router /api/user/register [POST]
-func (h userController) AddUser(enforcer *casbin.Enforcer) fiber.Handler {
+func (h Handler) AddUser(enforcer *casbin.Enforcer) fiber.Handler {
 	return func(ctx *fiber.Ctx) error {
 		var user pb.User
 		if err := ctx.BodyParser(&user); err != nil {
@@ -135,7 +113,7 @@ func (h userController) AddUser(enforcer *casbin.Enforcer) fiber.Handler {
 		}
 
 		utils.HashPassword(&user.Password)
-		_, err := h.userService.UserService().CreateUser(ctx.Context(), &user)
+		_, err := h.services.UserService().CreateUser(ctx.Context(), &user)
 		if err != nil {
 			return ctx.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 		}
@@ -161,9 +139,9 @@ func (h userController) AddUser(enforcer *casbin.Enforcer) fiber.Handler {
 // @Failure 400 {object} http.Response{data=string} "Bad request"
 // @Failure 500 {object} http.Response{data=string} "Internal server error"
 // @Router /api/user/{user_id} [PUT]
-func (h userController) UpdateUser(ctx *fiber.Ctx) error {
+func (h Handler) UpdateUser(ctx *fiber.Ctx) error {
 	id := ctx.Params("id")
-	_, err := h.userService.UserService().UpdateUser(ctx.Context(), &pb.User{Id: id})
+	_, err := h.services.UserService().UpdateUser(ctx.Context(), &pb.User{Id: id})
 	if err != nil {
 		return ctx.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}
@@ -183,11 +161,11 @@ func (h userController) UpdateUser(ctx *fiber.Ctx) error {
 // @Failure 400 {object} http.Response{data=string} "Bad request"
 // @Failure 500 {object} http.Response{data=string} "Internal server error"
 // @Router /api/user/{user_id} [DELETE]
-func (h userController) DeleteUser(ctx *fiber.Ctx) error {
+func (h Handler) DeleteUser(ctx *fiber.Ctx) error {
 
 	id := ctx.Params("user_id")
 
-	_, err := h.userService.UserService().DeleteUser(ctx.Context(), &pb.ById{Id: id})
+	_, err := h.services.UserService().DeleteUser(ctx.Context(), &pb.ById{Id: id})
 	if err != nil {
 		return ctx.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}

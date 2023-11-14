@@ -7,10 +7,9 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
-	"github.com/husanmusa/auth_pro_service/api/controller"
 	_ "github.com/husanmusa/auth_pro_service/api/docs"
-	"github.com/husanmusa/auth_pro_service/grpc/client"
-	"github.com/husanmusa/auth_pro_service/middleware"
+	"github.com/husanmusa/auth_pro_service/api/handlers"
+	middleware2 "github.com/husanmusa/auth_pro_service/api/middleware"
 )
 
 // @securityDefinitions.apikey ApiKeyAuth
@@ -19,7 +18,7 @@ import (
 // SetUpRouter godoc
 // @description This is a api gateway
 // @termsOfService https://udevs.io
-func SetUpRouter(svc client.ServiceManagerI, enforcer *casbin.Enforcer) *fiber.App {
+func SetUpRouter(h handlers.Handler, enforcer *casbin.Enforcer) *fiber.App {
 
 	router := fiber.New(fiber.Config{JSONEncoder: json.Marshal, BodyLimit: 100 * 1024 * 1024})
 	router.Use(logger.New(), cors.New())
@@ -27,17 +26,15 @@ func SetUpRouter(svc client.ServiceManagerI, enforcer *casbin.Enforcer) *fiber.A
 	router.Get("/api/swagger/*", swagger.HandlerDefault)
 	r := router.Group("/api")
 
-	userController := controller.NewUserController(svc)
+	r.Post("/user/register", h.AddUser(enforcer))
+	r.Post("/user/signin", h.SignInUser)
 
-	r.Post("/user/register", userController.AddUser(enforcer))
-	r.Post("/user/signin", userController.SignInUser)
-
-	r.Use(middleware.AuthorizeJWT())
+	r.Use(middleware2.AuthorizeJWT())
 
 	// APPOINTMENT
-	r.Get("/user", middleware.Authorize("userGet", "read", enforcer), userController.GetAllUser)
-	r.Get("/user/:user_id", middleware.Authorize("userGet", "read", enforcer), userController.GetUser)
-	r.Put("/user/:user_id", middleware.Authorize("userUpt", "write", enforcer), userController.UpdateUser)
-	r.Delete("/user/:user_id", middleware.Authorize("userUpt", "write", enforcer), userController.DeleteUser)
+	r.Get("/user", middleware2.Authorize("userGet", "read", enforcer), h.GetAllUser)
+	r.Get("/user/:user_id", middleware2.Authorize("userGet", "read", enforcer), h.GetUser)
+	r.Put("/user/:user_id", middleware2.Authorize("userUpt", "write", enforcer), h.UpdateUser)
+	r.Delete("/user/:user_id", middleware2.Authorize("userUpt", "write", enforcer), h.DeleteUser)
 	return router
 }

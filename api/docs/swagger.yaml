@@ -30,6 +30,8 @@ definitions:
     type: object
 info:
   contact: {}
+  description: This is a api gateway
+  termsOfService: https://udevs.io
 paths:
   /api/user/:
     get:
@@ -280,7 +282,6 @@ paths:
       - User
 securityDefinitions:
   ApiKeyAuth:
-    description: This is a api gateway
     in: header
     name: Authorization
     type: apiKey

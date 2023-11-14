@@ -1,6 +1,8 @@
 {
     "swagger": "2.0",
     "info": {
+        "description": "This is a api gateway",
+        "termsOfService": "https://udevs.io",
         "contact": {}
     },
     "paths": {
@@ -504,7 +506,6 @@
     },
     "securityDefinitions": {
         "ApiKeyAuth": {
-            "description": "This is a api gateway",
             "type": "apiKey",
             "name": "Authorization",
             "in": "header"

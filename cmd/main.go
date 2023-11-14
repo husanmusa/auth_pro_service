@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/casbin/casbin/v2"
 	"github.com/husanmusa/auth_pro_service/api"
+	"github.com/husanmusa/auth_pro_service/api/handlers"
 	"github.com/husanmusa/auth_pro_service/config"
 	"github.com/husanmusa/auth_pro_service/grpc"
 	"github.com/husanmusa/auth_pro_service/grpc/client"
@@ -57,8 +58,10 @@ func main() {
 			log.Error("grpcServer.Serve", logger.Error(err))
 		}
 	}()
+	h := handlers.NewHandler(cfg, log, svcs)
 
-	r := api.SetUpRouter(svcs, enforcer)
+
+	r := api.SetUpRouter(h, enforcer)
 
 	err = r.Listen(cfg.HTTPPort)
 	if err != nil {
