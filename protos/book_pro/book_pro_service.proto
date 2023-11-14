@@ -1,0 +1,39 @@
+syntax="proto3";
+
+package book_pro_service;
+option go_package="genproto/book_pro_service";
+import "google/protobuf/empty.proto";
+
+service BookProService {
+  rpc CreateBook(Book) returns (google.protobuf.Empty) {}
+  rpc UpdateBook(Book) returns (google.protobuf.Empty) {}
+  rpc GetBookList(GetBookListRequest) returns (GetBookListResponse) {}
+  rpc GetBook(ById) returns (Book) {}
+  rpc DeleteBook(ById) returns (google.protobuf.Empty) {}
+}
+
+message Book {
+  string id = 1;
+  string name = 2;
+  string author_name = 3;
+  int32 pages = 4;
+  string description = 5;
+  string book_category = 6;
+  string book_category_id = 7;
+  string created_at = 8;
+}
+
+message ById {
+  string id = 1;
+}
+
+message GetBookListRequest {
+  int32 limit = 1;
+  int32 offset = 2;
+  string book_category_id = 3;
+}
+
+message GetBookListResponse {
+  repeated Book books = 1;
+  int32 count = 2;
+}

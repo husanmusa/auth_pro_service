@@ -1,0 +1,287 @@
+definitions:
+  auth_service.SignInReq:
+    properties:
+      password:
+        type: string
+      username:
+        type: string
+    type: object
+  auth_service.User:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+      password:
+        type: string
+      role:
+        type: string
+      username:
+        type: string
+    type: object
+  http.Response:
+    properties:
+      data: {}
+      description:
+        type: string
+      error: {}
+      status:
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /api/user/:
+    get:
+      consumes:
+      - application/json
+      description: This API for getting users
+      parameters:
+      - description: offset
+        in: query
+        name: offset
+        type: integer
+      - description: limit
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "400":
+          description: Bad request
+          schema:
+            allOf:
+            - $ref: '#/definitions/http.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/http.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get users
+      tags:
+      - User
+  /api/user/{user_id}:
+    delete:
+      consumes:
+      - application/json
+      operationId: delete_user
+      parameters:
+      - description: user_id
+        in: path
+        name: user_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success DeleteUser
+          schema:
+            allOf:
+            - $ref: '#/definitions/http.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "400":
+          description: Bad request
+          schema:
+            allOf:
+            - $ref: '#/definitions/http.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/http.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Delete user by_id
+      tags:
+      - User
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: user_id
+        in: path
+        name: user_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: GetUser ResponseBody
+          schema:
+            allOf:
+            - $ref: '#/definitions/http.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/auth_service.User'
+              type: object
+        "400":
+          description: Bad request
+          schema:
+            allOf:
+            - $ref: '#/definitions/http.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/http.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get user by user_id
+      tags:
+      - User
+    put:
+      consumes:
+      - application/json
+      operationId: update_user
+      parameters:
+      - description: UserUpdateRequest
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/auth_service.User'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success Update
+          schema:
+            allOf:
+            - $ref: '#/definitions/http.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "400":
+          description: Bad request
+          schema:
+            allOf:
+            - $ref: '#/definitions/http.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/http.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Update user by_id
+      tags:
+      - User
+  /api/user/register:
+    post:
+      consumes:
+      - application/json
+      description: This API for creating a new user
+      parameters:
+      - description: UserCreateRequest
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/auth_service.User'
+      produces:
+      - application/json
+      responses:
+        "400":
+          description: Bad request
+          schema:
+            allOf:
+            - $ref: '#/definitions/http.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/http.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+      summary: Create a new user
+      tags:
+      - User
+  /api/user/signin:
+    post:
+      consumes:
+      - application/json
+      description: This API for sign in a user
+      parameters:
+      - description: SignInReq
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/auth_service.SignInReq'
+      produces:
+      - application/json
+      responses:
+        "400":
+          description: Bad request
+          schema:
+            allOf:
+            - $ref: '#/definitions/http.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/http.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+      summary: sign in a user
+      tags:
+      - User
+securityDefinitions:
+  ApiKeyAuth:
+    description: This is a api gateway
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
