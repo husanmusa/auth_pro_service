@@ -90,7 +90,7 @@ func (h Handler) SignInUser(ctx *fiber.Ctx) error {
 		return ctx.Status(http.StatusInternalServerError).JSON(fiber.Map{"msg": "No Such User Found"})
 	}
 
-	return ctx.Status(http.StatusInternalServerError).JSON(fiber.Map{"token": token})
+	return ctx.Status(http.StatusOK).JSON(fiber.Map{"token": token})
 }
 
 // AddUser godoc
